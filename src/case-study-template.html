@@ -1,0 +1,532 @@
+<title>Fleet Priority</title>
+<style>
+@font-face {
+  font-family: 'Oswald';
+  src: url(data:font/truetype;base64,__FONT_B64__) format('truetype');
+  font-weight: 200 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --paper: #f5efe2;
+  --paper-raised: #ece1c9;
+  --paper-raised-2: #e4d7b9;
+  --ink: #241f17;
+  --ink-dim: #6f6553;
+  --ink-faint: #9a8f77;
+  --line: #d3c4a0;
+  --line-strong: #b8a67c;
+  --accent: #b8501a;
+  --accent-ink: #fdf6ea;
+  --stamp: #2c5372;
+  --good: #3f7a4e;
+  --warn: #a5720f;
+  --critical: #a63a2a;
+  --plate-bg: #efe6cf;
+  --shadow: 0 1px 0 rgba(36,31,23,0.06);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #17130d;
+    --paper-raised: #201a11;
+    --paper-raised-2: #291f13;
+    --ink: #f1e6d2;
+    --ink-dim: #a89a80;
+    --ink-faint: #7c6f59;
+    --line: #3a3020;
+    --line-strong: #4d3f28;
+    --accent: #e8842f;
+    --accent-ink: #1a1006;
+    --stamp: #7ba3c4;
+    --good: #5fae76;
+    --warn: #d9a13c;
+    --critical: #d9695a;
+    --plate-bg: #1e1810;
+    --shadow: 0 1px 0 rgba(0,0,0,0.3);
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #17130d;
+  --paper-raised: #201a11;
+  --paper-raised-2: #291f13;
+  --ink: #f1e6d2;
+  --ink-dim: #a89a80;
+  --ink-faint: #7c6f59;
+  --line: #3a3020;
+  --line-strong: #4d3f28;
+  --accent: #e8842f;
+  --accent-ink: #1a1006;
+  --stamp: #7ba3c4;
+  --good: #5fae76;
+  --warn: #d9a13c;
+  --critical: #d9695a;
+  --plate-bg: #1e1810;
+  --shadow: 0 1px 0 rgba(0,0,0,0.3);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: Georgia, 'Iowan Old Style', 'Palatino Linotype', 'Times New Roman', serif;
+  font-size: 17px;
+  line-height: 1.62;
+  -webkit-font-smoothing: antialiased;
+}
+
+.mono {
+  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, 'Roboto Mono', monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+.display {
+  font-family: 'Oswald', ui-sans-serif, system-ui, sans-serif;
+  text-transform: uppercase;
+  letter-spacing: 0.01em;
+}
+
+a { color: var(--stamp); text-decoration-thickness: 1px; text-underline-offset: 2px; }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+::selection { background: var(--accent); color: var(--accent-ink); }
+
+.sheet {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 0 28px 120px;
+}
+
+/* ---------- Header / masthead ---------- */
+.masthead {
+  padding: 56px 0 34px;
+  border-bottom: 3px solid var(--ink);
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+.masthead-mark {
+  font-family: 'Oswald', ui-sans-serif, system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-dim);
+}
+.masthead-mark span { color: var(--accent); }
+.masthead-case {
+  font-family: 'Oswald', ui-sans-serif, system-ui, sans-serif;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+h1.title {
+  font-family: 'Oswald', ui-sans-serif, system-ui, sans-serif;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.005em;
+  font-size: clamp(48px, 9vw, 84px);
+  line-height: 0.94;
+  margin: 18px 0 6px;
+  text-wrap: balance;
+}
+.subtitle {
+  font-family: 'Oswald', ui-sans-serif, system-ui, sans-serif;
+  font-weight: 400;
+  font-size: 19px;
+  letter-spacing: 0.01em;
+  color: var(--ink-dim);
+  text-transform: none;
+  margin: 0 0 28px;
+  max-width: 46ch;
+}
+
+/* metadata strip like a form's field table */
+.meta {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  border-top: 1px solid var(--line-strong);
+  border-bottom: 1px solid var(--line-strong);
+  margin-bottom: 8px;
+}
+.meta dl { margin: 0; padding: 14px 18px; border-left: 1px solid var(--line); }
+.meta dl:first-child { border-left: none; padding-left: 0; }
+.meta dt {
+  font-family: 'Oswald', ui-sans-serif, system-ui, sans-serif;
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  margin-bottom: 5px;
+}
+.meta dd {
+  margin: 0;
+  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 13.5px;
+  color: var(--ink);
+  line-height: 1.35;
+}
+@media (max-width: 680px) {
+  .meta { grid-template-columns: 1fr 1fr; }
+  .meta dl:nth-child(3) { border-left: none; }
+}
+
+/* ---------- Section structure ---------- */
+section.doc-section { padding: 64px 0 8px; border-top: 1px solid var(--line); }
+section.doc-section:first-of-type { border-top: none; }
+
+.section-head {
+  display: flex;
+  align-items: baseline;
+  gap: 14px;
+  margin-bottom: 22px;
+}
+.section-num {
+  font-family: 'Oswald', ui-sans-serif, system-ui, sans-serif;
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--accent);
+  letter-spacing: 0.04em;
+  flex-shrink: 0;
+}
+h2.section-title {
+  font-family: 'Oswald', ui-sans-serif, system-ui, sans-serif;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  font-size: clamp(26px, 4vw, 34px);
+  margin: 0;
+  text-wrap: balance;
+}
+
+.lede {
+  font-size: 19px;
+  line-height: 1.6;
+  color: var(--ink);
+  max-width: 62ch;
+}
+p { max-width: 66ch; }
+.prose p + p { margin-top: 1.1em; }
+
+/* ---------- Feature entries ---------- */
+.feature {
+  margin: 40px 0 52px;
+}
+.feature-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 8px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+h3.feature-title {
+  font-family: 'Oswald', ui-sans-serif, system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 21px;
+  text-transform: uppercase;
+  letter-spacing: 0.015em;
+  margin: 0;
+}
+.feature-tag {
+  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 11.5px;
+  letter-spacing: 0.03em;
+  color: var(--ink-faint);
+  text-transform: uppercase;
+}
+.feature p { color: var(--ink-dim); font-size: 16px; }
+.feature p strong { color: var(--ink); font-weight: 600; }
+
+/* ---------- Exhibit plates (screenshots) ---------- */
+figure.plate {
+  margin: 22px 0 0;
+  background: var(--plate-bg);
+  border: 1px solid var(--line-strong);
+  padding: 10px;
+}
+figure.plate img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid var(--line);
+}
+figcaption.plate-cap {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+  padding: 10px 4px 2px;
+  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 11.5px;
+  letter-spacing: 0.02em;
+  color: var(--ink-faint);
+  text-transform: uppercase;
+}
+figcaption.plate-cap .exhibit-id { color: var(--accent); font-weight: 700; }
+
+/* ---------- Engineering log entries ---------- */
+.log-entry {
+  display: grid;
+  grid-template-columns: 108px 1fr;
+  gap: 20px;
+  padding: 22px 0;
+  border-top: 1px solid var(--line);
+}
+.log-entry:first-child { border-top: none; padding-top: 0; }
+.log-label {
+  font-family: 'Oswald', ui-sans-serif, system-ui, sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  padding-top: 3px;
+}
+.log-body h4 {
+  font-family: 'Oswald', ui-sans-serif, system-ui, sans-serif;
+  font-weight: 600;
+  font-size: 17.5px;
+  text-transform: none;
+  letter-spacing: 0.005em;
+  margin: 0 0 8px;
+}
+.log-body p { color: var(--ink-dim); font-size: 15.5px; margin: 0; }
+.log-body code {
+  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  background: var(--paper-raised);
+  padding: 1px 5px;
+  border-radius: 3px;
+  font-size: 0.92em;
+  color: var(--ink);
+}
+@media (max-width: 560px) {
+  .log-entry { grid-template-columns: 1fr; gap: 6px; }
+}
+
+/* ---------- Stack table ---------- */
+.stack-table { width: 100%; border-collapse: collapse; margin-top: 6px; }
+.stack-table tr { border-top: 1px solid var(--line); }
+.stack-table tr:first-child { border-top: none; }
+.stack-table td { padding: 11px 4px; font-size: 15px; vertical-align: baseline; }
+.stack-table td:first-child {
+  font-family: 'Oswald', ui-sans-serif, system-ui, sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  width: 150px;
+  white-space: nowrap;
+}
+.stack-table td:last-child { color: var(--ink-dim); }
+.stack-table td:last-child strong { color: var(--ink); font-weight: 600; }
+
+/* ---------- Status pills reused from product's own semantic colors ---------- */
+.pill {
+  display: inline-block;
+  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 11px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  padding: 2px 8px;
+  border-radius: 3px;
+  font-weight: 600;
+}
+.pill.good { background: color-mix(in srgb, var(--good) 18%, transparent); color: var(--good); }
+.pill.warn { background: color-mix(in srgb, var(--warn) 18%, transparent); color: var(--warn); }
+.pill.crit { background: color-mix(in srgb, var(--critical) 18%, transparent); color: var(--critical); }
+
+/* ---------- Footer / colophon ---------- */
+footer.colophon {
+  margin-top: 70px;
+  padding-top: 24px;
+  border-top: 3px solid var(--ink);
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  font-size: 12px;
+  color: var(--ink-faint);
+  letter-spacing: 0.01em;
+}
+footer.colophon strong { color: var(--ink-dim); }
+
+@media (prefers-reduced-motion: no-preference) {
+  .feature, figure.plate { transition: none; }
+}
+</style>
+
+<div class="sheet">
+
+  <header class="masthead">
+    <div>
+      <div class="masthead-mark">FLEET<span>PRIORITY</span> &nbsp;/&nbsp; PRODUCT DOSSIER</div>
+      <h1 class="title">Fleet Priority</h1>
+      <p class="subtitle">A subscription SaaS that gives small rental-car operators one place to track every vehicle's condition, cost, and paperwork &mdash; built solo, end to end, with Claude Code.</p>
+    </div>
+    <div class="masthead-case mono">CASE&nbsp;NO. FP&#8209;001<br>STATUS: LIVE</div>
+  </header>
+
+  <div class="meta">
+    <dl><dt>Role</dt><dd>Solo build, product &amp; engineering</dd></dl>
+    <dl><dt>Built with</dt><dd>Claude Code, end to end</dd></dl>
+    <dl><dt>Stack</dt><dd>Node &middot; Express &middot; Stripe &middot; vanilla JS</dd></dl>
+    <dl><dt>Status</dt><dd>Deployed, custom domain, HTTPS</dd></dl>
+  </div>
+
+  <section class="doc-section">
+    <div class="section-head">
+      <span class="section-num mono">01</span>
+      <h2 class="section-title">The Brief</h2>
+    </div>
+    <p class="lede">Small rental fleets run on spreadsheets, text threads, and a shoebox of paper mechanic receipts. Tag renewals slip. Insurance lapses go unnoticed until a claim. And there's rarely any record of what a car actually looked like before it left the lot versus when it came back.</p>
+    <div class="prose">
+      <p>Fleet Priority replaces that with a single dashboard per operator: every vehicle's tag, insurance, mileage, payoff status, maintenance history, and condition in one place, with real accounts, real subscriptions, and real accountability &mdash; not a shared spreadsheet anyone can silently edit.</p>
+      <p>It ships as a two-tier subscription product (Basic and Pro), with Stripe handling billing and a feature gate separating the tiers, so it's a real business, not just an internal tool.</p>
+    </div>
+  </section>
+
+  <section class="doc-section">
+    <div class="section-head">
+      <span class="section-num mono">02</span>
+      <h2 class="section-title">What It Does</h2>
+    </div>
+
+    <div class="feature">
+      <div class="feature-head">
+        <h3 class="feature-title">Fleet Dashboard</h3>
+        <span class="feature-tag">Search &middot; filter &middot; sort</span>
+      </div>
+      <p>Every vehicle as a card: status, tag expiration, tires, mechanic, and a <strong>payoff bar that decays automatically each month</strong> from a monthly-payment figure, so balances stay current without manual updates. Search by tag, VIN, make, model, or mechanic; filter by status; sort by mileage, year, or tag.</p>
+      <figure class="plate">
+        <img src="__IMG_01__" alt="Fleet Priority dashboard showing five vehicle cards with status badges, payoff bars, and fleet-wide stats">
+        <figcaption class="plate-cap"><span class="exhibit-id">EXHIBIT A</span><span>Fleet dashboard</span></figcaption>
+      </figure>
+    </div>
+
+    <div class="feature">
+      <div class="feature-head">
+        <h3 class="feature-title">Vehicle Record</h3>
+        <span class="feature-tag">One car, full history</span>
+      </div>
+      <p>Maintenance history with attached receipts, a per-vehicle gas-cost trend chart plotting every individual fill-up on a fixed axis, insurance documents and policy tracking (Pro), and a preferred-mechanic contact &mdash; all locked to view-only until an explicit <strong>Edit</strong> is pressed, so nothing changes by accident.</p>
+      <figure class="plate">
+        <img src="__IMG_02__" alt="Vehicle edit modal showing vehicle details, photo, and the automatically decaying payoff tracker bar">
+        <figcaption class="plate-cap"><span class="exhibit-id">EXHIBIT B</span><span>Vehicle record</span></figcaption>
+      </figure>
+    </div>
+
+    <div class="feature">
+      <div class="feature-head">
+        <h3 class="feature-title">Vehicle Inspections</h3>
+        <span class="feature-tag">Newest module</span>
+      </div>
+      <p>A fixed six-point photo checklist &mdash; front, rear, each side, interior, odometer &mdash; captured straight from a phone camera. The distinguishing move: starting a new inspection automatically pulls up the <strong>same vehicle's last inspection photos side by side</strong>, so damage gets judged against the last known state, not memory. Each finding carries a <span class="pill warn">MINOR</span> or <span class="pill crit">MAJOR</span> severity tag and a note.</p>
+      <figure class="plate">
+        <img src="__IMG_04__" alt="New inspection flow showing the before and after photo comparison for the front and rear inspection slots">
+        <figcaption class="plate-cap"><span class="exhibit-id">EXHIBIT C</span><span>Before / after capture flow</span></figcaption>
+      </figure>
+      <figure class="plate" style="margin-top:14px;">
+        <img src="__IMG_03__" alt="Completed inspection detail view showing a flagged scratch with photo, severity badge, and note">
+        <figcaption class="plate-cap"><span class="exhibit-id">EXHIBIT D</span><span>Flagged inspection detail</span></figcaption>
+      </figure>
+    </div>
+
+    <div class="feature">
+      <div class="feature-head">
+        <h3 class="feature-title">Fleet-Wide Reporting</h3>
+        <span class="feature-tag">Spend across every car</span>
+      </div>
+      <p>Spend broken down by service type, month-over-month oil-change and gas-cost trends, and a running log of recent maintenance across the whole fleet &mdash; the numbers an owner actually checks before deciding whether a car is worth keeping.</p>
+      <figure class="plate">
+        <img src="__IMG_05__" alt="Fleet overview report page showing spend-by-service-type chart, cost trend charts, and a maintenance activity table">
+        <figcaption class="plate-cap"><span class="exhibit-id">EXHIBIT E</span><span>Fleet overview report</span></figcaption>
+      </figure>
+    </div>
+
+    <div class="feature">
+      <div class="feature-head">
+        <h3 class="feature-title">Notifications &amp; Account</h3>
+        <span class="feature-tag">Nothing slips</span>
+      </div>
+      <p>Tag, insurance, and maintenance deadlines surface automatically &mdash; overdue items flagged in red, due-soon in amber &mdash; with optional email reminders sent on a schedule. Settings covers profile, a theme picker that can follow the OS live, password changes, and a list of every signed-in device with per-device sign-out.</p>
+      <figure class="plate">
+        <img src="__IMG_07__" alt="Notifications page showing overdue tag and insurance alerts and upcoming due-soon maintenance items">
+        <figcaption class="plate-cap"><span class="exhibit-id">EXHIBIT F</span><span>Notifications</span></figcaption>
+      </figure>
+      <figure class="plate" style="margin-top:14px;">
+        <img src="__IMG_06__" alt="Settings page showing profile, appearance theme picker, notification preferences, password change, and linked devices">
+        <figcaption class="plate-cap"><span class="exhibit-id">EXHIBIT G</span><span>Settings &amp; linked devices</span></figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="doc-section">
+    <div class="section-head">
+      <span class="section-num mono">03</span>
+      <h2 class="section-title">Under the Hood</h2>
+    </div>
+    <p class="lede">The interesting parts weren't the CRUD screens. A few real problems came up along the way &mdash; here's how each got run down.</p>
+
+    <div class="log-entry">
+      <div class="log-label mono">CORRECTNESS</div>
+      <div class="log-body">
+        <h4>A cascading delete that quietly failed</h4>
+        <p>Deleting a vehicle sometimes left its maintenance records behind. The cause: the data layer read the JSON file fresh, mutated it, and wrote it back &mdash; twice, in two separate calls &mdash; so the second write could clobber the first before it landed. The fix wasn't a patch on the delete route; it was restructuring the whole store around one shared in-memory copy with serialized writes, so every mutation is immediately visible to the next one regardless of disk timing.</p>
+      </div>
+    </div>
+    <div class="log-entry">
+      <div class="log-label mono">SECURITY</div>
+      <div class="log-body">
+        <h4>Sessions, not just tokens</h4>
+        <p>Auth started as a bare JWT &mdash; fine for "is this user logged in," useless for "sign this one device out." Reworked so every login mints a server-tracked session record and the token carries a session id instead of just a user id. That's what makes per-device revocation possible, and what lets a password change safely kill every other session in one move without guessing which token belongs to which browser.</p>
+      </div>
+    </div>
+    <div class="log-entry">
+      <div class="log-label mono">PRODUCTION</div>
+      <div class="log-body">
+        <h4>A live Stripe integration, debugged live</h4>
+        <p>Checkout worked in testing, then failed in production with <code>Managed Payments is not supported on API version 2024&#8209;06&#8209;20</code>. The account had a newer Stripe feature enabled than the SDK's default API version supported. Fix was to stop relying on the SDK's default and pin the API version explicitly &mdash; the kind of bug that only shows up against a real account, not a sandbox.</p>
+      </div>
+    </div>
+    <div class="log-entry">
+      <div class="log-label mono">DEPLOYMENT</div>
+      <div class="log-body">
+        <h4>A real box, not a platform</h4>
+        <p>Deployed to a plain Ubuntu VM rather than a managed platform, since the JSON-file store and uploaded photos need a persistent disk: Node process managed by <code>pm2</code>, nginx as reverse proxy, DNS delegated through Route&nbsp;53, TLS via Let's Encrypt, and a live Stripe webhook endpoint wired up for real subscription events.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="doc-section">
+    <div class="section-head">
+      <span class="section-num mono">04</span>
+      <h2 class="section-title">Stack</h2>
+    </div>
+    <table class="stack-table">
+      <tr><td>Backend</td><td><strong>Node.js</strong> &amp; <strong>Express</strong>, REST API under <code>/api/*</code></td></tr>
+      <tr><td>Data</td><td>JSON-file store, in-memory cache with serialized writes &mdash; documented seam to swap in <strong>Postgres</strong> at scale</td></tr>
+      <tr><td>Auth</td><td><strong>JWT</strong> in an httpOnly cookie, <strong>bcrypt</strong> password hashing, server-tracked sessions for device management</td></tr>
+      <tr><td>Payments</td><td><strong>Stripe</strong> Checkout, subscriptions, webhooks, promotion codes</td></tr>
+      <tr><td>Frontend</td><td>Vanilla JS, HTML, CSS &mdash; no framework &mdash; <strong>Chart.js</strong> for trend charts</td></tr>
+      <tr><td>Email</td><td><strong>Resend</strong> API for password resets &amp; reminders, console-log fallback for local dev</td></tr>
+      <tr><td>Infra</td><td><strong>AWS Lightsail</strong> (Ubuntu), <strong>nginx</strong>, <strong>pm2</strong>, <strong>Let's Encrypt</strong>, DNS on <strong>Route&nbsp;53</strong></td></tr>
+    </table>
+  </section>
+
+  <footer class="colophon">
+    <div><strong>Fleet Priority</strong> &mdash; product dossier, prepared for portfolio review.</div>
+    <div>Screens shown use seeded demo data. No customer information appears above.</div>
+  </footer>
+
+</div>
